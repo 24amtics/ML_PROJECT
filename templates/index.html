@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CellSense | Breast Cell Measurement Classifier</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">✳</span> CellSense</a>
+    <span class="top-note">Machine learning demonstration</span>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow"><span class="dot"></span> ML • HEALTHCARE EDUCATION</div>
+      <h1>Can a machine learn to spot breast cancer from cell measurements?</h1>
+      <p class="hero-copy">Explore how a machine-learning model uses measurements of cell nuclei to classify patterns in a well-known research dataset.</p>
+      <div class="hero-stats">
+        <div><strong>30</strong><span>cell measurements</span></div>
+        <div><strong>569</strong><span>research samples</span></div>
+        <div><strong>1</strong><span>demo prediction</span></div>
+      </div>
+    </section>
+
+    <section class="notice">
+      <span class="notice-icon">ⓘ</span>
+      <div><strong>Educational project only</strong><p>This tool is not a medical device and cannot diagnose or rule out cancer. Use measurements supplied by a qualified professional, and consult a healthcare professional for medical decisions.</p></div>
+    </section>
+
+    {% if error %}
+      <div class="alert error">{{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+    <section class="result-card {{ result.kind }}">
+      <div class="result-top">
+        <div>
+          <div class="eyebrow">MODEL OUTPUT</div>
+          <h2>{{ result.label }}</h2>
+          <p>This is the classifier's estimate for the values entered, not a diagnosis.</p>
+        </div>
+        <div class="result-symbol">{{ '✓' if result.kind == 'benign' else '!' }}</div>
+      </div>
+      <div class="probability-grid">
+        <div class="probability">
+          <div class="prob-label"><span>Benign class probability</span><strong>{{ result.benign_probability }}%</strong></div>
+          <div class="track"><div class="fill benign-fill" style="width: {{ result.benign_probability }}%"></div></div>
+        </div>
+        <div class="probability">
+          <div class="prob-label"><span>Malignant class probability</span><strong>{{ result.malignant_probability }}%</strong></div>
+          <div class="track"><div class="fill malignant-fill" style="width: {{ result.malignant_probability }}%"></div></div>
+        </div>
+      </div>
+      <p class="result-foot">Probabilities are model outputs and may be inaccurate or poorly calibrated for data outside the training dataset.</p>
+    </section>
+    {% endif %}
+
+    <form method="post" class="measurement-form">
+      <div class="form-heading">
+        <div><div class="eyebrow">INPUT DATA</div><h2>Enter cell measurements</h2><p>Example dataset-average values are prefilled. Replace them with valid measurements to try the demo.</p></div>
+        <button type="button" class="secondary" onclick="resetExamples()">Reset examples</button>
+      </div>
+      {% for group in groups %}
+      <details class="measure-group" {% if loop.first %}open{% endif %}>
+        <summary><span>{{ group.title }}</span><span class="count">{{ group.fields|length }} values</span></summary>
+        <div class="fields">
+          {% for field in group.fields %}
+          <label class="field">
+            <span>{{ field.label }}</span>
+            <input type="number" name="{{ field.name }}" step="any" min="0" value="{{ field.value }}" required>
+          </label>
+          {% endfor %}
+        </div>
+      </details>
+      {% endfor %}
+      <button class="primary" type="submit">Analyze measurements <span>→</span></button>
+      <p class="form-foot">All 30 values are required. Measurements should be in the same format and units as the training dataset.</p>
+    </form>
+
+    <section class="how">
+      <div class="eyebrow">HOW IT WORKS</div>
+      <h2>From measurements to a model output</h2>
+      <div class="steps">
+        <article><span>01</span><h3>Measure</h3><p>Cell-nucleus features such as radius, texture, perimeter and area are recorded.</p></article>
+        <article><span>02</span><h3>Learn patterns</h3><p>A logistic-regression model learns statistical patterns from labeled research examples.</p></article>
+        <article><span>03</span><h3>Estimate</h3><p>The trained model returns a class prediction and class probabilities for the entered values.</p></article>
+      </div>
+    </section>
+    <footer>Built with Python · Flask · scikit-learn <span>Student project — not for clinical use</span></footer>
+  </main>
+  <script>
+    const examples = {{ groups|tojson }};
+    function resetExamples() {
+      document.querySelectorAll('input[type="number"]').forEach(input => {
+        const name = input.name;
+        for (const group of examples) {
+          const field = group.fields.find(f => f.name === name);
+          if (field) input.value = field.value;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
